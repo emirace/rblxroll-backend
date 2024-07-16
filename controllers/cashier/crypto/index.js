@@ -3,6 +3,7 @@ const User = require("../../../database/models/User");
 const CryptoPrice = require("../../../database/models/CryptoPrice");
 const CryptoAddress = require("../../../database/models/CryptoAddress");
 const CryptoTransaction = require("../../../database/models/CryptoTransaction");
+const axios = require("axios");
 
 // Load utils
 const { socketRemoveAntiSpam } = require("../../../utils/socket");
@@ -28,7 +29,7 @@ const cashierGetCryptoDataSocket = async (io, socket, user, data, callback) => {
         cashierCryptoGenerateAddress("btc"),
         cashierCryptoGenerateAddress("eth"),
         cashierCryptoGenerateAddress("ltc"),
-        cashierCryptoGenerateAddress("usdt.erc20"),
+        cashierCryptoGenerateAddress("usdt"),
         cashierCryptoGenerateAddress("usdc"),
       ]);
 
@@ -175,63 +176,133 @@ const cashierSendCryptoWithdrawSocket = async (
   }
 };
 
+// const cashierCryptoCheckPrices = async () => {
+//   try {
+//     // Get crypto prices from coinpayments api
+//     const dataPrices = await cashierCryptoGetPrices();
+
+//     // Get bitcoin price
+//     const priceBtc = Math.floor((1 / dataPrices.USD.rate_btc) * 1000);
+
+//     // Update crypto prices in database
+//     await Promise.all([
+//       CryptoPrice.findOneAndUpdate(
+//         { name: "btc" },
+//         {
+//           price: priceBtc,
+//           fee: Math.floor((dataPrices.BTC.tx_fee / 1) * priceBtc),
+//         },
+//         { upsert: true }
+//       ),
+//       CryptoPrice.findOneAndUpdate(
+//         { name: "eth" },
+//         {
+//           price: Math.floor(priceBtc * dataPrices.ETH.rate_btc),
+//           fee: Math.floor(
+//             (dataPrices.ETH.tx_fee / 1) * priceBtc * dataPrices.ETH.rate_btc
+//           ),
+//         },
+//         { upsert: true }
+//       ),
+//       CryptoPrice.findOneAndUpdate(
+//         { name: "ltc" },
+//         {
+//           price: Math.floor(priceBtc * dataPrices.LTC.rate_btc),
+//           fee: Math.floor(
+//             (dataPrices.LTC.tx_fee / 1) * priceBtc * dataPrices.LTC.rate_btc
+//           ),
+//         },
+//         { upsert: true }
+//       ),
+//       CryptoPrice.findOneAndUpdate(
+//         { name: "usdt" },
+//         {
+//           price: Math.floor(priceBtc * dataPrices["USDT.ERC20"].rate_btc),
+//           fee: Math.floor(
+//             (dataPrices["USDT.ERC20"].tx_fee / 1) *
+//               priceBtc *
+//               dataPrices["USDT.ERC20"].rate_btc
+//           ),
+//         },
+//         { upsert: true }
+//       ),
+//       CryptoPrice.findOneAndUpdate(
+//         { name: "usdc" },
+//         {
+//           price: Math.floor(priceBtc * dataPrices.USDC.rate_btc),
+//           fee: Math.floor(
+//             (dataPrices.USDC.tx_fee / 1) * priceBtc * dataPrices.USDC.rate_btc
+//           ),
+//         },
+//         { upsert: true }
+//       ),
+//     ]);
+
+//     setTimeout(() => {
+//       cashierCryptoCheckPrices();
+//     }, 1000 * 60 * 60 * 6);
+//   } catch (err) {
+//     setTimeout(() => {
+//       cashierCryptoCheckPrices();
+//     }, 1000 * 60 * 60 * 6);
+//   }
+// };
+
 const cashierCryptoCheckPrices = async () => {
   try {
-    // Get crypto prices from coinpayments api
+    // Get crypto prices from Oxapay API
     const dataPrices = await cashierCryptoGetPrices();
 
     // Get bitcoin price
-    const priceBtc = Math.floor((1 / dataPrices.USD.rate_btc) * 1000);
+    const priceBtc = Math.floor(dataPrices.BTC * 1000);
 
-    // Update crypto prices in database
+    // Update crypto prices in the database
     await Promise.all([
       CryptoPrice.findOneAndUpdate(
         { name: "btc" },
         {
           price: priceBtc,
-          fee: Math.floor((dataPrices.BTC.tx_fee / 1) * priceBtc),
+          fee: Math.floor((0.001 / 1) * priceBtc), // Example fee calculation, adjust as needed
         },
         { upsert: true }
       ),
       CryptoPrice.findOneAndUpdate(
         { name: "eth" },
         {
-          price: Math.floor(priceBtc * dataPrices.ETH.rate_btc),
+          price: Math.floor(priceBtc * (dataPrices.ETH / dataPrices.BTC)),
           fee: Math.floor(
-            (dataPrices.ETH.tx_fee / 1) * priceBtc * dataPrices.ETH.rate_btc
-          ),
+            (0.01 / 1) * priceBtc * (dataPrices.ETH / dataPrices.BTC)
+          ), // Example fee calculation, adjust as needed
         },
         { upsert: true }
       ),
       CryptoPrice.findOneAndUpdate(
         { name: "ltc" },
         {
-          price: Math.floor(priceBtc * dataPrices.LTC.rate_btc),
+          price: Math.floor(priceBtc * (dataPrices.LTC / dataPrices.BTC)),
           fee: Math.floor(
-            (dataPrices.LTC.tx_fee / 1) * priceBtc * dataPrices.LTC.rate_btc
-          ),
+            (0.01 / 1) * priceBtc * (dataPrices.LTC / dataPrices.BTC)
+          ), // Example fee calculation, adjust as needed
         },
         { upsert: true }
       ),
       CryptoPrice.findOneAndUpdate(
         { name: "usdt" },
         {
-          price: Math.floor(priceBtc * dataPrices["USDT.ERC20"].rate_btc),
+          price: Math.floor(priceBtc * (dataPrices.USDT / dataPrices.BTC)),
           fee: Math.floor(
-            (dataPrices["USDT.ERC20"].tx_fee / 1) *
-              priceBtc *
-              dataPrices["USDT.ERC20"].rate_btc
-          ),
+            (0.01 / 1) * priceBtc * (dataPrices.USDT / dataPrices.BTC)
+          ), // Example fee calculation, adjust as needed
         },
         { upsert: true }
       ),
       CryptoPrice.findOneAndUpdate(
         { name: "usdc" },
         {
-          price: Math.floor(priceBtc * dataPrices.USDC.rate_btc),
+          price: Math.floor(priceBtc * (dataPrices.USDC / dataPrices.BTC)),
           fee: Math.floor(
-            (dataPrices.USDC.tx_fee / 1) * priceBtc * dataPrices.USDC.rate_btc
-          ),
+            (0.01 / 1) * priceBtc * (dataPrices.USDC / dataPrices.BTC)
+          ), // Example fee calculation, adjust as needed
         },
         { upsert: true }
       ),
@@ -241,6 +312,7 @@ const cashierCryptoCheckPrices = async () => {
       cashierCryptoCheckPrices();
     }, 1000 * 60 * 60 * 6);
   } catch (err) {
+    console.error(err);
     setTimeout(() => {
       cashierCryptoCheckPrices();
     }, 1000 * 60 * 60 * 6);

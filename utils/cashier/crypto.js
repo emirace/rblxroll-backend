@@ -62,52 +62,52 @@ const cashierCheckSendCryptoWithdrawTransactions = (transactionsDatabase) => {
   }
 };
 
-const cashierCryptoGetPrices = () => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // Create body object
-      const body = {
-        cmd: "rates",
-        short: 1,
-        accepted: 2,
-        key: process.env.COINPAYMENTS_API_KEY,
-        version: 1,
-        format: "json",
-      };
+// const cashierCryptoGetPrices = () => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       // Create body object
+//       const body = {
+//         cmd: "rates",
+//         short: 1,
+//         accepted: 2,
+//         key: process.env.COINPAYMENTS_API_KEY,
+//         version: 1,
+//         format: "json",
+//       };
 
-      // Convert body object to string
-      const bodyString = Object.entries(body)
-        .map(([key, value]) => `${key}=${value}`)
-        .join("&");
+//       // Convert body object to string
+//       const bodyString = Object.entries(body)
+//         .map(([key, value]) => `${key}=${value}`)
+//         .join("&");
 
-      // Create headers object
-      let headers = {
-        "content-type": "application/x-www-form-urlencoded",
-        hmac: crypto
-          .createHmac("sha512", process.env.COINPAYMENTS_PRIVATE_KEY)
-          .update(bodyString)
-          .digest("hex"),
-      };
+//       // Create headers object
+//       let headers = {
+//         "content-type": "application/x-www-form-urlencoded",
+//         hmac: crypto
+//           .createHmac("sha512", process.env.COINPAYMENTS_PRIVATE_KEY)
+//           .update(bodyString)
+//           .digest("hex"),
+//       };
 
-      // Send get crypto deposit address
-      let response = await fetch(`https://www.coinpayments.net/api.php`, {
-        method: "POST",
-        headers: headers,
-        body: new URLSearchParams(body),
-      });
+//       // Send get crypto deposit address
+//       let response = await fetch(`https://www.coinpayments.net/api.php`, {
+//         method: "POST",
+//         headers: headers,
+//         body: new URLSearchParams(body),
+//       });
 
-      // Check if the response is successful
-      if (response.ok) {
-        response = await response.json();
-        resolve(response.result);
-      } else {
-        reject(new Error(response.statusText));
-      }
-    } catch (err) {
-      reject(err);
-    }
-  });
-};
+//       // Check if the response is successful
+//       if (response.ok) {
+//         response = await response.json();
+//         resolve(response.result);
+//       } else {
+//         reject(new Error(response.statusText));
+//       }
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// };
 
 // const cashierCryptoGenerateAddress = (currency) => {
 //     return new Promise(async(resolve, reject) => {
@@ -150,28 +150,54 @@ const cashierCryptoGetPrices = () => {
 //     });
 // }
 
+const cashierCryptoGetPrices = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // const response = await axios.get('https://api.oxapay.com/price', {
+      //   headers: {
+      //     'Authorization': `Bearer ${process.env.OXAPAY_API_KEY}`
+      //   }
+      // });
+
+      let response = await axios.get("https://oxapay.onrender.com/get-prices", {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(response.data);
+
+      if (response.status === 200 && response.data.result === 100) {
+        resolve(response.data.data);
+      } else {
+        reject(new Error(response.data.message || "Failed to fetch prices"));
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
 const cashierCryptoGenerateAddress = (currency) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Create the request body
-      const body = {
-        merchant: process.env.OXAPAY_API_KEY,
-        currency: currency,
-        callbackUrl: "https://example.com/callback", // Replace with your actual callback URL
-        network: "default", // Optional: specify the network if needed
-      };
+      //   const body = {
+      //     merchant: process.env.OXAPAY_API_KEY,
+      //     currency: currency,
+      //     callbackUrl: "https://example.com/callback", // Replace with your actual callback URL
+      //     network: "default", // Optional: specify the network if needed
+      //   };
 
       // Send the request to Oxapay
       let response = await axios.post(
-        "https://api.oxapay.com/merchants/request/staticaddress",
-        body,
+        "https://oxapay.onrender.com/generate-address",
+        { currency },
         {
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
-      console.log(response);
       // Check if the response is successful
       if (response.status === 200) {
         resolve(response.data);
