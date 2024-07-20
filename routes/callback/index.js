@@ -39,7 +39,6 @@ module.exports = (io) => {
   // @access  Public
   router.post("/oxapay", rateLimiterMiddleware, async (req, res) => {
     try {
-      console.log(req.body);
       // Create sha512 hmac for sent body
       const hmac = crypto
         .createHmac("sha512", process.env.OXAPAY_API_KEY)
@@ -48,7 +47,6 @@ module.exports = (io) => {
 
       // Validate sent hmac
       if (hmac !== req.headers["hmac"]) {
-        console.log("invalid hmac signature");
         return res
           .status(400)
           .json({ success: false, error: "Invalid HMAC signature" });
@@ -60,7 +58,6 @@ module.exports = (io) => {
 
       // Validate crypto transaction
       if (callbackBlockTransactionCrypto.includes(transactionId.toString())) {
-        console.log("already exist");
         return res
           .status(400)
           .json({ success: false, error: "Transaction already processed" });
@@ -69,7 +66,6 @@ module.exports = (io) => {
       try {
         // Add transactions id to crypto block array
         callbackBlockTransactionCrypto.push(transactionId.toString());
-        console.log("calling db");
         // Get crypto address and crypto transaction from database
         let dataDatabase = await Promise.all([
           CryptoAddress.findOne({ name: currency, address: req.body.address })
@@ -80,7 +76,6 @@ module.exports = (io) => {
             .select("amount data type user state")
             .lean(),
         ]);
-        console.log(dataDatabase);
         if (
           req.body.type === "payment" &&
           req.body.status === "Paid" &&
@@ -91,11 +86,10 @@ module.exports = (io) => {
           let promises = [];
 
           // Get transaction amount in fiat (assuming payAmount is in the smallest unit of the cryptocurrency)
-          const amountFiat = parseFloat(req.body.price);
+          const amountFiat = Math.floor(req.body.price * 1000);
 
           // Get transaction amount in robux
-          const amount = (amountFiat / 3) * 1000;
-          console.log(amount);
+          const amount = Math.floor((amountFiat / 3) * 1000);
           // Add update user and create crypto transaction queries to promises array
           promises = [
             User.findByIdAndUpdate(
@@ -154,7 +148,6 @@ module.exports = (io) => {
 
           // Execute promises array queries
           dataDatabase = await Promise.all(promises);
-          console.log(dataDatabase);
 
           // Convert transaction object to javascript object
           dataDatabase[1] = dataDatabase[1].toObject();
@@ -176,7 +169,6 @@ module.exports = (io) => {
           1
         );
 
-        console.log("successs");
         res.status(200).json({ success: true });
       } catch (err) {
         console.log(err);
