@@ -91,10 +91,10 @@ module.exports = (io) => {
           let promises = [];
 
           // Get transaction amount in fiat (assuming payAmount is in the smallest unit of the cryptocurrency)
-          const amountFiat = Math.floor(req.body.price);
+          const amountFiat = parseFloat(req.body.price);
 
           // Get transaction amount in robux
-          const amount = Math.floor((amountFiat / 3) * 1000);
+          const amount = (amountFiat / 3) * 1000;
           console.log(amount);
           // Add update user and create crypto transaction queries to promises array
           promises = [
