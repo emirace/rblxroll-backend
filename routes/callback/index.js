@@ -95,7 +95,7 @@ module.exports = (io) => {
 
           // Get transaction amount in robux
           const amount = Math.floor((amountFiat / 3) * 1000);
-
+          console.log(amount);
           // Add update user and create crypto transaction queries to promises array
           promises = [
             User.findByIdAndUpdate(
@@ -154,6 +154,7 @@ module.exports = (io) => {
 
           // Execute promises array queries
           dataDatabase = await Promise.all(promises);
+          console.log(dataDatabase);
 
           // Convert transaction object to javascript object
           dataDatabase[1] = dataDatabase[1].toObject();
