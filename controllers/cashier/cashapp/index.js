@@ -62,11 +62,10 @@ const cashierSendCashappDepositSocket = async (
     }
     callback({
       success: true,
-      note: verificationNote,
+      note: transactionDatabase.data.providerId,
       cashtag: cashTag,
       id: transactionDatabase._id,
       createdAt: transactionDatabase.createdAt,
-      text: "text",
     });
 
     socketRemoveAntiSpam(user._id);
