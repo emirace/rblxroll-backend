@@ -181,12 +181,12 @@ const cashierCryptoGenerateAddress = (currency) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Create the request body
-      //   const body = {
-      //     merchant: process.env.OXAPAY_API_KEY,
-      //     currency: currency,
-      //     callbackUrl: "https://example.com/callback", // Replace with your actual callback URL
-      //     network: "default", // Optional: specify the network if needed
-      //   };
+      const body = {
+        merchant: process.env.OXAPAY_API_KEY,
+        currency: currency,
+        callbackUrl: `${process.env.SERVER_BACKEND_URL}/callback/oxapay`, // Replace with your actual callback URL
+        network: "default", // Optional: specify the network if needed
+      };
 
       // Send the request to Oxapay
       let response = await axios.post(

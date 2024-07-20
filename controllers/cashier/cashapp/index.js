@@ -42,31 +42,31 @@ const cashierSendCashappDepositSocket = async (
       type: "deposit",
       user: user._id,
       state: "created",
-    })
-      .select("data type user state")
-      .lean();
-
+      amount,
+    });
     if (transactionDatabase === null) {
       transactionDatabase = await CreditTransaction.create({
         data: {
           providerId: verificationNote, // Using verification note as providerId for tracking
           providerUrl: cashTag, // Using cashTag as providerUrl for tracking
+          amountCurrency: amount,
+          currency: "usd",
         },
+        amount,
         type: "deposit",
         user: user._id,
-        amount,
         state: "created",
       });
 
       transactionDatabase = transactionDatabase.toObject();
     }
-    console.log(transactionDatabase);
     callback({
       success: true,
       note: verificationNote,
       cashtag: cashTag,
       id: transactionDatabase._id,
       createdAt: transactionDatabase.createdAt,
+      text: "text",
     });
 
     socketRemoveAntiSpam(user._id);

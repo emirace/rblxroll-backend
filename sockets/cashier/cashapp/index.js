@@ -20,7 +20,6 @@ const {
 
 module.exports = (io, socket) => {
   socket.on("sendCashappDeposit", async (data, callback) => {
-    console.log("got here");
     if (callback === undefined || typeof callback !== "function") {
       return;
     }

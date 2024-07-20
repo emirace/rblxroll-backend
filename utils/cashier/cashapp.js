@@ -4,14 +4,14 @@ const cashierCheckSendCashappDepositData = (data) => {
   } else if (
     data.amount === undefined ||
     isNaN(data.amount) === true ||
-    Math.floor(data.amount) < 10
+    Math.floor(data.amount) < 1.42
   ) {
     throw new Error("Your provided deposit amount is invalid.");
   } else if (
-    Math.floor(data.amount) < Math.floor(process.env.CREDIT_MIN_AMOUNT * 1000)
+    Math.floor(data.amount) < Math.floor(process.env.CREDIT_MIN_AMOUNT * 1.42)
   ) {
     throw new Error(
-      `You can only deposit a min amount of R$${parseFloat(
+      `You can only deposit a min amount of $${parseFloat(
         process.env.CREDIT_MIN_AMOUNT
       )
         .toFixed(2)

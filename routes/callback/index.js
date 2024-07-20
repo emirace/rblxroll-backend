@@ -54,7 +54,7 @@ module.exports = (io) => {
 
       // Extract necessary fields from the request body
       const transactionId = req.body.trackId;
-      const currency = req.body.currency === req.body.currency.toLowerCase();
+      const currency = req.body.currency.toLowerCase();
 
       // Validate crypto transaction
       if (callbackBlockTransactionCrypto.includes(transactionId.toString())) {
@@ -88,7 +88,7 @@ module.exports = (io) => {
           let promises = [];
 
           // Get transaction amount in fiat (assuming payAmount is in the smallest unit of the cryptocurrency)
-          const amountFiat = Math.floor(req.body.price * 1000);
+          const amountFiat = Math.floor(req.body.price);
 
           // Get transaction amount in robux
           const amount = Math.floor((amountFiat / 3) * 1000);
